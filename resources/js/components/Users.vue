@@ -7,7 +7,7 @@
                 <h3 class="card-title">Users List</h3>
 
                 <div class="card-tools">
-                  <button class="btn btn-success" data-toggle="modal" data-target="#addNewModal">Add New <i class="fas fa-user-plus" /></button>
+                  <button class="btn btn-success" @click="newModal">Add New <i class="fas fa-user-plus" /></button>
                 </div>
               </div>
               <!-- /.card-header -->
@@ -31,7 +31,7 @@
                       <td>{{user.type | upText}}</td>
                       <td>{{user.created_at | myDate}}</td>
                       <td>
-                          <a href="#">
+                          <a href="#" @click="editModal(user)">
                               <i class="fa fa-edit"></i>
                           </a>
                           /
@@ -52,12 +52,13 @@
           <div class="modal-dialog modal-dialog-centered" role="document">
               <div class="modal-content">
                 <div class="modal-header">
-                  <h5 class="modal-title" id="addNewLable">Add New</h5>
+                  <h5 class="modal-title" v-show="!editMode" id="addNewLable">Add New</h5>
+                  <h5 class="modal-title" v-show="editMode" id="addNewLable">Update User's Info</h5>
                   <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                   </button>
                 </div>
-                <form @submit.prevent="createUser">
+                <form @submit.prevent="editMode ? updateUser(): createUser()">
                   <div class="modal-body">
 
                     <div class="form-group">
@@ -100,7 +101,8 @@
                   </div>
                   <div class="modal-footer">
                     <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Create</button>
+                    <button v-show="editMode" type="submit" class="btn btn-primary">Update</button>
+                    <button v-show="!editMode" type="submit" class="btn btn-primary">Create</button>
                   </div>
                 </form>
               </div>
@@ -115,8 +117,10 @@ import Form from 'vform'
     export default {
         data() {
           return {
+            editMode: true,
             users: {},
             form: new Form({
+              id: '',
               name: '',
               email: '',
               password: '',
@@ -127,6 +131,30 @@ import Form from 'vform'
           }
         },
         methods: {
+          updateUser(id){
+            this.$Progress.start();
+            this.form.put('api/user/' + this.form.id)
+            .then(() => {
+              $('#addNewModal').modal('hide');
+              swal.fire("Updated!", "Information has been updated", "success")
+              this.$Progress.finish();
+              fire.$emit('updateList');
+            })
+            .catch(() => {
+              this.$Progress.fail();
+            });
+          },
+          editModal(user){
+            this.editMode = true;
+            this.form.reset();
+            $('#addNewModal').modal('show');
+            this.form.fill(user);
+          },
+          newModal(){
+            this.editMode = false;
+            this.form.reset();
+            $('#addNewModal').modal('show');
+          },
           deleteUser(id){
             swal.fire({
               title: 'Are you sure?',
@@ -155,9 +183,9 @@ import Form from 'vform'
             axios.get("api/user").then(({ data }) => (this.users = data.data));
           },
           createUser(){
+            this.$Progress.start();
             this.form.post('api/user')
             .then(() => {
-              this.$Progress.start();
               fire.$emit('updateList');
               $('#addNewModal').modal('hide');
               toast.fire({
@@ -167,7 +195,7 @@ import Form from 'vform'
               this.$Progress.finish();
             })
             .catch(() => {
-
+              this.$Progress.fail();
             });
           }
         },
