@@ -17,6 +17,39 @@ Vue.component(AlertError.name, AlertError)
 import VueRouter from 'vue-router'
 Vue.use(VueRouter)
 
+import Swal from 'sweetalert2'
+window.swal = Swal;
+
+const Toast = Swal.mixin({
+  toast: true,
+  position: 'top-end',
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  onOpen: (toast) => {
+    toast.addEventListener('mouseenter', Swal.stopTimer)
+    toast.addEventListener('mouseleave', Swal.resumeTimer)
+  }
+});
+
+window.toast = Toast;
+
+import VueProgressBar from 'vue-progressbar'
+
+const options = {
+  color: '#bffaf3',
+  failedColor: '#874b4b',
+  thickness: '3px',
+  transition: {
+    speed: '0.2s',
+    opacity: '0.6s',
+    termination: 300
+  }
+}
+
+Vue.use(VueProgressBar, options)
+
+
 let  routes = [
   { path: '/dashboard', component: require('./components/Dashboard.vue').default },
   { path: '/users', component: require('./components/Users.vue').default },
@@ -35,6 +68,9 @@ Vue.filter('upText', function(text){
 Vue.filter('myDate', function(date){
   return moment(date).format('MMMM Do YYYY, h:mm:ss a');
 });
+
+let Fire = new Vue();
+window.fire = Fire;
 
 /**
  * The following block of code may be used to automatically register your

@@ -35,7 +35,7 @@
                               <i class="fa fa-edit"></i>
                           </a>
                           /
-                          <a href="#">
+                          <a href="#" @click="deleteUser(user.id)">
                               <i class="fa fa-trash"></i>
                           </a>
                       </td>
@@ -127,15 +127,55 @@ import Form from 'vform'
           }
         },
         methods: {
+          deleteUser(id){
+            swal.fire({
+              title: 'Are you sure?',
+              text: "You won't be able to revert this!",
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#3085d6',
+              cancelButtonColor: '#d33',
+              confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+              if(result.value){
+                this.form.delete('api/user/' + id).then(() => {
+                  swal.fire(
+                    'Deleted!',
+                    'Your file has been deleted.',
+                    'success'
+                  )
+                  fire.$emit('updateList');
+                }).catch(() => {
+                  swal.fire("Failed", "There was something wrong.", "warning")
+                });
+              }
+            })
+          },
           loadUsers(){
             axios.get("api/user").then(({ data }) => (this.users = data.data));
           },
           createUser(){
-            this.form.post('api/user');
+            this.form.post('api/user')
+            .then(() => {
+              this.$Progress.start();
+              fire.$emit('updateList');
+              $('#addNewModal').modal('hide');
+              toast.fire({
+                icon: 'success',
+                title: 'User created successfully'
+              });
+              this.$Progress.finish();
+            })
+            .catch(() => {
+
+            });
           }
         },
         created() {
             this.loadUsers();
+            fire.$on('updateList', () => {
+              this.loadUsers();
+            });
         }
     }
 </script>
